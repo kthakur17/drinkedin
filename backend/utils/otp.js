@@ -24,14 +24,21 @@ const verifyOTP = async (otp, hash) => {
 
 // ─── Email OTP ────────────────────────────────────────────────────────────────
 const sendEmailOTP = async (email, otp) => {
+  console.log(`📧 Sending OTP to ${email} via ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}`);
+  console.log(`   EMAIL_USER: ${process.env.EMAIL_USER ? '***set***' : '!!!MISSING!!!'}`);
+  console.log(`   EMAIL_PASS: ${process.env.EMAIL_PASS ? '***set***' : '!!!MISSING!!!'}`);
+
   const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT) || 587,
     secure: false,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 
   const mailOptions = {

@@ -1,10 +1,9 @@
 /**
  * OTP Utility
- * Supports email (Resend API / Nodemailer fallback) and SMS (Twilio) delivery
+ * Supports email (Brevo HTTP API) and SMS (Twilio) delivery
  */
 
 const bcrypt = require('bcryptjs');
-const { Resend } = require('resend');
 
 // Generate a 6-digit OTP
 const generateOTP = () => {
@@ -22,34 +21,43 @@ const verifyOTP = async (otp, hash) => {
   return bcrypt.compare(otp, hash);
 };
 
-// ─── Email OTP via Resend API (HTTPS, no SMTP ports needed) ──────────────────
+// ─── Email OTP via Brevo HTTP API (free, 300/day, any recipient) ─────────────
 const sendEmailOTP = async (email, otp) => {
-  console.log(`📧 Sending OTP to ${email} via Resend API`);
-  console.log(`   RESEND_API_KEY: ${process.env.RESEND_API_KEY ? '***set***' : '!!!MISSING!!!'}`);
+  console.log(`📧 Sending OTP to ${email} via Brevo API`);
 
-  const resend = new Resend(process.env.RESEND_API_KEY);
-
-  const { error } = await resend.emails.send({
-    from: 'Drinkedin <onboarding@resend.dev>',
-    to: email,
-    subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
-    html: `
-      <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">
-        <h1 style="font-size: 28px; margin-bottom: 8px;">Drinkedin</h1>
-        <p style="color: #ccc; font-size: 14px;">LinkedIn by Day, Drinkedin by Night</p>
-        <hr style="border-color: #f0c040; opacity: 0.2; margin: 24px 0;" />
-        <p style="color: #eee; font-size: 16px;">Your verification code:</p>
-        <div style="background: #1a2040; border: 2px solid #f0c040; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0;">
-          <span style="font-size: 40px; font-weight: bold; letter-spacing: 12px; color: #f0c040;">${otp}</span>
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': process.env.BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: {
+        name: 'Drinkedin',
+        email: process.env.BREVO_SENDER_EMAIL,
+      },
+      to: [{ email }],
+      subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
+      htmlContent: `
+        <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">
+          <h1 style="font-size: 28px; margin-bottom: 8px;">Drinkedin</h1>
+          <p style="color: #ccc; font-size: 14px;">LinkedIn by Day, Drinkedin by Night</p>
+          <hr style="border-color: #f0c040; opacity: 0.2; margin: 24px 0;" />
+          <p style="color: #eee; font-size: 16px;">Your verification code:</p>
+          <div style="background: #1a2040; border: 2px solid #f0c040; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0;">
+            <span style="font-size: 40px; font-weight: bold; letter-spacing: 12px; color: #f0c040;">${otp}</span>
+          </div>
+          <p style="color: #999; font-size: 13px;">Valid for 10 minutes. Don't share this with your manager.</p>
         </div>
-        <p style="color: #999; font-size: 13px;">Valid for 10 minutes. Don't share this with your manager.</p>
-      </div>
-    `,
+      `,
+    }),
   });
 
-  if (error) {
-    console.error('Resend error:', error);
-    throw new Error(error.message || 'Failed to send email');
+  if (!res.ok) {
+    const errBody = await res.json();
+    console.error('Brevo error:', errBody);
+    throw new Error(errBody.message || 'Failed to send email');
   }
 
   console.log(`✅ OTP email sent to ${email}`);

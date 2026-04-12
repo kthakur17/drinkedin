@@ -1,0 +1,14 @@
+{
+  "name": "drinkedin",
+  "version": "1.0.0",
+  "description": "LinkedIn by Day, Drinkedin by Night — monorepo root",
+  "private": true,
+  "scripts": {
+    "dev:backend":  "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all":  "cd backend && npm install && cd ../frontend && npm install",
+    "seed":         "cd backend && npm run seed",
+    "build":        "cd frontend && npm run build",
+    "start":        "cd backend && node server.js"
+  }
+}

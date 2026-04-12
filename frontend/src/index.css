@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Styles ─────────────────────────────────────────────────────────── */
+@layer base {
+  * { box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-navy-900 text-gray-100 font-body;
+    background-image:
+      radial-gradient(ellipse at 10% 20%, rgba(240,192,64,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, rgba(240,192,64,0.03) 0%, transparent 50%);
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-navy-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-navy-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-gold-600; }
+
+  ::selection { @apply bg-gold-600 text-navy-900; }
+}
+
+/* ─── Component Layer ─────────────────────────────────────────────────────── */
+@layer components {
+
+  /* Cards */
+  .card {
+    @apply bg-card-gradient border border-navy-600 rounded-2xl shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-gold-700 hover:shadow-gold;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply bg-gold-gradient text-navy-900 font-semibold px-5 py-2.5 rounded-xl
+           transition-all duration-200 hover:opacity-90 hover:scale-[1.02]
+           active:scale-[0.98] shadow-gold;
+  }
+
+  .btn-secondary {
+    @apply bg-navy-700 text-gold-400 border border-gold-700 font-medium px-5 py-2.5 rounded-xl
+           transition-all duration-200 hover:bg-navy-600 hover:border-gold-500;
+  }
+
+  .btn-ghost {
+    @apply text-gray-400 px-3 py-2 rounded-lg transition-all duration-150
+           hover:text-gold-400 hover:bg-navy-700;
+  }
+
+  .btn-danger {
+    @apply bg-red-900/40 text-red-400 border border-red-800 font-medium px-4 py-2 rounded-xl
+           transition-all duration-200 hover:bg-red-800/60;
+  }
+
+  /* Inputs */
+  .input {
+    @apply w-full bg-navy-800 border border-navy-600 rounded-xl px-4 py-3
+           text-gray-100 placeholder-gray-500 font-body
+           focus:outline-none focus:border-gold-600 focus:ring-2 focus:ring-gold-600/20
+           transition-all duration-200;
+  }
+
+  .textarea {
+    @apply input resize-none;
+  }
+
+  /* Badge pill */
+  .badge-pill {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium
+           bg-gold-600/10 text-gold-400 border border-gold-700/30;
+  }
+
+  /* Avatar */
+  .avatar {
+    @apply rounded-full object-cover flex-shrink-0;
+  }
+
+  /* Nav link */
+  .nav-link {
+    @apply flex items-center gap-2.5 px-4 py-3 rounded-xl font-medium text-gray-400
+           transition-all duration-150 hover:text-gold-400 hover:bg-navy-700 cursor-pointer;
+  }
+
+  .nav-link-active {
+    @apply nav-link text-gold-400 bg-navy-700 border border-gold-800/50;
+  }
+
+  /* Weekend mode overlay */
+  .weekend-banner {
+    background: linear-gradient(135deg, #1a0a2e 0%, #0f0a1e 50%, #1a0a2e 100%);
+    border-color: rgba(168, 85, 247, 0.4);
+  }
+
+  /* Mood tag */
+  .mood-tag {
+    @apply inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium;
+  }
+
+  /* Skeleton loader */
+  .skeleton {
+    @apply bg-navy-700 animate-pulse rounded-lg;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-navy-600 my-4;
+  }
+}
+
+/* ─── Weekend Mode Overrides ──────────────────────────────────────────────── */
+body.weekend-mode {
+  background-image:
+    radial-gradient(ellipse at 10% 20%, rgba(168,85,247,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 90% 80%, rgba(236,72,153,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(240,192,64,0.03) 0%, transparent 70%);
+}
+
+/* ─── Post Card Animations ───────────────────────────────────────────────── */
+.post-enter { animation: slideUp 0.3s ease-out; }
+
+/* ─── Notification dot pulse ─────────────────────────────────────────────── */
+.notif-dot {
+  animation: pulseGold 2s ease-in-out infinite;
+}
+
+/* ─── Meme template overlay ──────────────────────────────────────────────── */
+.meme-caption {
+  text-shadow: 2px 2px 4px #000, -1px -1px 3px #000, 1px -1px 3px #000, -1px 1px 3px #000;
+  font-family: 'Impact', 'Arial Black', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* ─── Glassmorphism card ─────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(13, 21, 48, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(240, 192, 64, 0.1);
+}

@@ -31,8 +31,8 @@ const sendEmailOTP = async (email, otp) => {
     port: 2525,
     secure: false,
     auth: {
-      user: process.env.MAILEROO_API_KEY,
-      pass: process.env.MAILEROO_API_KEY,
+      user: process.env.MAILEROO_SMTP_USER,
+      pass: process.env.MAILEROO_SMTP_PASS,
     },
   });
 

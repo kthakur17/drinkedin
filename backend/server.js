@@ -116,9 +116,15 @@ app.use((err, req, res, next) => {
 
 // ─── Database & Server Start ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/drinkedin';
+
+console.log(`🚀 Starting Drinkedin server...`);
+console.log(`   PORT: ${PORT}`);
+console.log(`   MONGO_URI: ${MONGO_URI ? '***set***' : '!!!MISSING!!!'}`);
+console.log(`   NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
 
 mongoose
-  .connect(process.env.MONGO_URI || 'mongodb://localhost:27017/drinkedin')
+  .connect(MONGO_URI)
   .then(() => {
     console.log('✅ MongoDB connected');
     server.listen(PORT, () => {

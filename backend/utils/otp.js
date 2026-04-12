@@ -25,15 +25,15 @@ const verifyOTP = async (otp, hash) => {
 const sendEmailOTP = async (email, otp) => {
   console.log(`📧 Sending OTP to ${email} via Maileroo API`);
 
-  const res = await fetch('https://smtp.maileroo.com/v1/email/send', {
+  const res = await fetch('https://smtp.maileroo.com/api/v2/emails', {
     method: 'POST',
     headers: {
       'X-API-Key': process.env.MAILEROO_API_KEY,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: `Drinkedin <noreply@${process.env.MAILEROO_DOMAIN}>`,
-      to: email,
+      from: { address: `noreply@${process.env.MAILEROO_DOMAIN}`, display_name: 'Drinkedin' },
+      to: [{ address: email }],
       subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
       html: `
         <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "LinkedIn by Day, Drinkedin by Night — monorepo root",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev:backend":  "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",

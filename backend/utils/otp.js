@@ -23,7 +23,9 @@ const verifyOTP = async (otp, hash) => {
 
 // ─── Email OTP via Maileroo HTTP API (free, 3000/month, any recipient) ───────
 const sendEmailOTP = async (email, otp) => {
+  const apiKey = process.env.MAILEROO_API_KEY;
   console.log(`📧 Sending OTP to ${email} via Maileroo API`);
+  console.log(`   API Key starts with: ${apiKey ? apiKey.substring(0, 8) + '...' : 'MISSING'}, length: ${apiKey ? apiKey.length : 0}`);
 
   const formData = new FormData();
   formData.append('from', `Drinkedin <noreply@${process.env.MAILEROO_DOMAIN}>`);

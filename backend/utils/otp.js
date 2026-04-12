@@ -37,7 +37,7 @@ const sendEmailOTP = async (email, otp) => {
   });
 
   await transporter.sendMail({
-    from: `"Drinkedin" <noreply@${process.env.MAILEROO_DOMAIN}>`,
+    from: `"Drinkedin" <${process.env.MAILEROO_SMTP_USER}>`,
     to: email,
     subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
     html: `

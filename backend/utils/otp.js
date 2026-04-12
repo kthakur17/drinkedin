@@ -28,7 +28,7 @@ const sendEmailOTP = async (email, otp) => {
   const res = await fetch('https://smtp.maileroo.com/api/v2/emails', {
     method: 'POST',
     headers: {
-      'X-API-Key': process.env.MAILEROO_API_KEY,
+      'Authorization': `Bearer ${process.env.MAILEROO_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({

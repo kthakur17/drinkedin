@@ -1,10 +1,10 @@
 /**
  * OTP Utility
- * Supports both email (Nodemailer) and SMS (Twilio) delivery
+ * Supports email (Resend API / Nodemailer fallback) and SMS (Twilio) delivery
  */
 
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 // Generate a 6-digit OTP
 const generateOTP = () => {
@@ -22,39 +22,37 @@ const verifyOTP = async (otp, hash) => {
   return bcrypt.compare(otp, hash);
 };
 
-// ─── Email OTP ────────────────────────────────────────────────────────────────
+// ─── Email OTP via Resend API (HTTPS, no SMTP ports needed) ──────────────────
 const sendEmailOTP = async (email, otp) => {
-  console.log(`📧 Sending OTP to ${email} via ${process.env.EMAIL_HOST}:${process.env.EMAIL_PORT}`);
-  console.log(`   EMAIL_USER: ${process.env.EMAIL_USER ? '***set***' : '!!!MISSING!!!'}`);
-  console.log(`   EMAIL_PASS: ${process.env.EMAIL_PASS ? '***set***' : '!!!MISSING!!!'}`);
+  console.log(`📧 Sending OTP to ${email} via Resend API`);
+  console.log(`   RESEND_API_KEY: ${process.env.RESEND_API_KEY ? '***set***' : '!!!MISSING!!!'}`);
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
-  const mailOptions = {
-    from: `"Drinkedin 🍺" <${process.env.EMAIL_USER}>`,
+  const { error } = await resend.emails.send({
+    from: 'Drinkedin <onboarding@resend.dev>',
     to: email,
-    subject: '🍺 Your Drinkedin OTP — Drink Responsibly (Verify First)',
+    subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
     html: `
       <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">
-        <h1 style="font-size: 28px; margin-bottom: 8px;">🍺 Drinkedin</h1>
+        <h1 style="font-size: 28px; margin-bottom: 8px;">Drinkedin</h1>
         <p style="color: #ccc; font-size: 14px;">LinkedIn by Day, Drinkedin by Night</p>
         <hr style="border-color: #f0c040; opacity: 0.2; margin: 24px 0;" />
         <p style="color: #eee; font-size: 16px;">Your verification code:</p>
         <div style="background: #1a2040; border: 2px solid #f0c040; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0;">
           <span style="font-size: 40px; font-weight: bold; letter-spacing: 12px; color: #f0c040;">${otp}</span>
         </div>
-        <p style="color: #999; font-size: 13px;">Valid for 10 minutes. Don't share this with your manager. 🤫</p>
+        <p style="color: #999; font-size: 13px;">Valid for 10 minutes. Don't share this with your manager.</p>
       </div>
     `,
-  };
+  });
 
-  await transporter.sendMail(mailOptions);
+  if (error) {
+    console.error('Resend error:', error);
+    throw new Error(error.message || 'Failed to send email');
+  }
+
+  console.log(`✅ OTP email sent to ${email}`);
 };
 
 // ─── SMS OTP ──────────────────────────────────────────────────────────────────
@@ -63,7 +61,7 @@ const sendSMSOTP = async (phone, otp) => {
   const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
   await client.messages.create({
-    body: `🍺 Drinkedin OTP: ${otp} — Valid for 10 minutes. Cheers!`,
+    body: `Drinkedin OTP: ${otp} — Valid for 10 minutes. Cheers!`,
     from: process.env.TWILIO_PHONE_NUMBER,
     to: phone,
   });

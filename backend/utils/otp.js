@@ -1,6 +1,6 @@
 /**
  * OTP Utility
- * Supports email (Brevo HTTP API) and SMS (Twilio) delivery
+ * Supports email (Maileroo HTTP API) and SMS (Twilio) delivery
  */
 
 const bcrypt = require('bcryptjs');
@@ -21,25 +21,21 @@ const verifyOTP = async (otp, hash) => {
   return bcrypt.compare(otp, hash);
 };
 
-// ─── Email OTP via Brevo HTTP API (free, 300/day, any recipient) ─────────────
+// ─── Email OTP via Maileroo HTTP API (free, 3000/month, any recipient) ───────
 const sendEmailOTP = async (email, otp) => {
-  console.log(`📧 Sending OTP to ${email} via Brevo API`);
+  console.log(`📧 Sending OTP to ${email} via Maileroo API`);
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+  const res = await fetch('https://smtp.maileroo.com/v1/email/send', {
     method: 'POST',
     headers: {
-      'accept': 'application/json',
-      'api-key': process.env.BREVO_API_KEY,
-      'content-type': 'application/json',
+      'X-API-Key': process.env.MAILEROO_API_KEY,
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      sender: {
-        name: 'Drinkedin',
-        email: process.env.BREVO_SENDER_EMAIL,
-      },
-      to: [{ email }],
+      from: `Drinkedin <noreply@${process.env.MAILEROO_DOMAIN}>`,
+      to: email,
       subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
-      htmlContent: `
+      html: `
         <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">
           <h1 style="font-size: 28px; margin-bottom: 8px;">Drinkedin</h1>
           <p style="color: #ccc; font-size: 14px;">LinkedIn by Day, Drinkedin by Night</p>
@@ -55,9 +51,9 @@ const sendEmailOTP = async (email, otp) => {
   });
 
   if (!res.ok) {
-    const errBody = await res.json();
-    console.error('Brevo error:', errBody);
-    throw new Error(errBody.message || 'Failed to send email');
+    const errBody = await res.text();
+    console.error('Maileroo error:', errBody);
+    throw new Error(errBody || 'Failed to send email');
   }
 
   console.log(`✅ OTP email sent to ${email}`);

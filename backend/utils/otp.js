@@ -1,9 +1,10 @@
 /**
  * OTP Utility
- * Supports email (Maileroo HTTP API) and SMS (Twilio) delivery
+ * Supports email (Maileroo SMTP on port 2525) and SMS (Twilio) delivery
  */
 
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 
 // Generate a 6-digit OTP
 const generateOTP = () => {
@@ -21,42 +22,37 @@ const verifyOTP = async (otp, hash) => {
   return bcrypt.compare(otp, hash);
 };
 
-// ─── Email OTP via Maileroo HTTP API (free, 3000/month, any recipient) ───────
+// ─── Email OTP via Maileroo SMTP (port 2525 bypasses hosting blocks) ─────────
 const sendEmailOTP = async (email, otp) => {
-  const apiKey = process.env.MAILEROO_API_KEY;
-  console.log(`📧 Sending OTP to ${email} via Maileroo API`);
-  console.log(`   API Key starts with: ${apiKey ? apiKey.substring(0, 8) + '...' : 'MISSING'}, length: ${apiKey ? apiKey.length : 0}`);
+  console.log(`📧 Sending OTP to ${email} via Maileroo SMTP port 2525`);
 
-  const formData = new FormData();
-  formData.append('from', `Drinkedin <noreply@${process.env.MAILEROO_DOMAIN}>`);
-  formData.append('to', email);
-  formData.append('subject', 'Your Drinkedin OTP — Drink Responsibly (Verify First)');
-  formData.append('html', `
-    <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">
-      <h1 style="font-size: 28px; margin-bottom: 8px;">Drinkedin</h1>
-      <p style="color: #ccc; font-size: 14px;">LinkedIn by Day, Drinkedin by Night</p>
-      <hr style="border-color: #f0c040; opacity: 0.2; margin: 24px 0;" />
-      <p style="color: #eee; font-size: 16px;">Your verification code:</p>
-      <div style="background: #1a2040; border: 2px solid #f0c040; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0;">
-        <span style="font-size: 40px; font-weight: bold; letter-spacing: 12px; color: #f0c040;">${otp}</span>
-      </div>
-      <p style="color: #999; font-size: 13px;">Valid for 10 minutes. Don't share this with your manager.</p>
-    </div>
-  `);
-
-  const res = await fetch('https://smtp.maileroo.com/send', {
-    method: 'POST',
-    headers: {
-      'X-API-Key': process.env.MAILEROO_API_KEY,
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.maileroo.com',
+    port: 2525,
+    secure: false,
+    auth: {
+      user: process.env.MAILEROO_API_KEY,
+      pass: process.env.MAILEROO_API_KEY,
     },
-    body: formData,
   });
 
-  if (!res.ok) {
-    const errBody = await res.text();
-    console.error('Maileroo error:', errBody);
-    throw new Error(errBody || 'Failed to send email');
-  }
+  await transporter.sendMail({
+    from: `"Drinkedin" <noreply@${process.env.MAILEROO_DOMAIN}>`,
+    to: email,
+    subject: 'Your Drinkedin OTP — Drink Responsibly (Verify First)',
+    html: `
+      <div style="font-family: Georgia, serif; background: #0a0f1e; color: #f0c040; padding: 40px; border-radius: 12px; max-width: 480px; margin: 0 auto;">
+        <h1 style="font-size: 28px; margin-bottom: 8px;">Drinkedin</h1>
+        <p style="color: #ccc; font-size: 14px;">LinkedIn by Day, Drinkedin by Night</p>
+        <hr style="border-color: #f0c040; opacity: 0.2; margin: 24px 0;" />
+        <p style="color: #eee; font-size: 16px;">Your verification code:</p>
+        <div style="background: #1a2040; border: 2px solid #f0c040; border-radius: 8px; padding: 20px; text-align: center; margin: 16px 0;">
+          <span style="font-size: 40px; font-weight: bold; letter-spacing: 12px; color: #f0c040;">${otp}</span>
+        </div>
+        <p style="color: #999; font-size: 13px;">Valid for 10 minutes. Don't share this with your manager.</p>
+      </div>
+    `,
+  });
 
   console.log(`✅ OTP email sent to ${email}`);
 };

@@ -28,7 +28,6 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [tagline] = useState(TAGLINES[Math.floor(Math.random() * TAGLINES.length)]);
 
-  // ── Step 1: Send OTP ──────────────────────────────────────────
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError('');
@@ -43,7 +42,6 @@ export default function LoginPage() {
     }
   };
 
-  // ── Step 2: Verify OTP ────────────────────────────────────────
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError('');
@@ -70,8 +68,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-navy-gradient flex items-center justify-center p-4">
-      {/* Background noise texture */}
+    <div className="min-h-screen bg-navy-gradient flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background orbs */}
+      <div className="orb w-96 h-96 bg-gold-600/20 top-[-10%] left-[-10%] animate-float" />
+      <div className="orb w-80 h-80 bg-purple-600/10 bottom-[-5%] right-[-5%] animate-float-delayed" />
+      <div className="orb w-64 h-64 bg-blue-600/8 top-[40%] right-[10%] animate-float" />
+
+      {/* Noise texture */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.03]"
         style={{
@@ -81,22 +84,22 @@ export default function LoginPage() {
         }}
       />
 
-      <div className="w-full max-w-md animate-fade-in relative z-10">
+      <div className="w-full max-w-md relative z-10">
         {/* Logo */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-10 animate-fade-in">
           <div className="inline-flex items-center gap-3 mb-4">
-            <span className="text-5xl">💼🍺</span>
+            <span className="text-6xl animate-float drop-shadow-lg">💼🍺</span>
           </div>
-          <h1 className="font-display text-4xl font-black text-gold-400 tracking-tight mb-2">
+          <h1 className="font-display text-5xl font-black text-gradient-gold tracking-tight mb-3">
             Drinkedin
           </h1>
-          <p className="text-gray-400 text-sm font-body italic">{tagline}</p>
+          <p className="text-gray-400 text-sm font-body italic max-w-xs mx-auto">{tagline}</p>
         </div>
 
         {/* Card */}
-        <div className="card p-8">
+        <div className="glass-card rounded-2xl p-8 animate-scale-in">
           {step === 1 ? (
-            <>
+            <div className="animate-fade-in">
               <h2 className="font-display text-2xl text-white mb-1">Welcome back 🥂</h2>
               <p className="text-gray-500 text-sm mb-6">
                 Sign in or create an account — no password needed
@@ -104,16 +107,16 @@ export default function LoginPage() {
 
               <form onSubmit={handleSendOTP} className="space-y-5">
                 {/* Toggle email / phone */}
-                <div className="flex bg-navy-800 rounded-xl p-1 gap-1">
+                <div className="flex bg-navy-800/80 rounded-xl p-1 gap-1">
                   {['email', 'sms'].map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => setContactType(t)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                      className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                         contactType === t
-                          ? 'bg-gold-600 text-navy-900'
-                          : 'text-gray-400 hover:text-white'
+                          ? 'bg-gold-gradient text-navy-900 shadow-gold'
+                          : 'text-gray-400 hover:text-white hover:bg-navy-700/50'
                       }`}
                     >
                       {t === 'email' ? '📧 Email' : '📱 Phone'}
@@ -122,7 +125,7 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-400 text-sm mb-2">
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">
                     {contactType === 'email' ? 'Work email' : 'Phone number'}
                   </label>
                   <input
@@ -134,34 +137,39 @@ export default function LoginPage() {
                         ? 'you@company.com'
                         : '+91 9876543210'
                     }
-                    className="input"
+                    className="input py-3.5"
                     required
                     autoFocus
                   />
                 </div>
 
                 {error && (
-                  <p className="text-red-400 text-sm bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
-                    {error}
-                  </p>
+                  <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/20 border border-red-800/40 rounded-xl px-4 py-3">
+                    <span>⚠️</span> {error}
+                  </div>
                 )}
 
                 <button
                   type="submit"
                   disabled={loading || !contact}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary w-full py-3.5 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Sending... 🍺' : 'Send OTP →'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-navy-900/30 border-t-navy-900 rounded-full animate-spin" />
+                      Sending...
+                    </span>
+                  ) : 'Send OTP →'}
                 </button>
               </form>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="animate-slide-up">
               <button
                 onClick={() => { setStep(1); setOtp(''); setError(''); }}
-                className="text-gold-600 text-sm mb-4 hover:text-gold-400 transition-colors"
+                className="text-gold-600 text-sm mb-4 hover:text-gold-400 transition-colors flex items-center gap-1 group"
               >
-                ← Back
+                <span className="group-hover:-translate-x-1 transition-transform">←</span> Back
               </button>
 
               <h2 className="font-display text-2xl text-white mb-1">Check your {contactType === 'email' ? 'inbox' : 'messages'} 🍻</h2>
@@ -172,7 +180,7 @@ export default function LoginPage() {
 
               <form onSubmit={handleVerifyOTP} className="space-y-5">
                 <div>
-                  <label className="block text-gray-400 text-sm mb-2">
+                  <label className="block text-gray-400 text-sm mb-2 font-medium">
                     Enter OTP
                   </label>
                   <input
@@ -180,7 +188,7 @@ export default function LoginPage() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
-                    className="input text-center text-3xl font-mono tracking-[1rem] py-4"
+                    className="input text-center text-3xl font-mono tracking-[1rem] py-5 bg-navy-800/80 border-navy-500"
                     maxLength={6}
                     required
                     autoFocus
@@ -191,32 +199,37 @@ export default function LoginPage() {
                 </div>
 
                 {error && (
-                  <p className="text-red-400 text-sm bg-red-900/20 border border-red-800/40 rounded-lg px-3 py-2">
-                    {error}
-                  </p>
+                  <div className="flex items-center gap-2 text-red-400 text-sm bg-red-900/20 border border-red-800/40 rounded-xl px-4 py-3">
+                    <span>⚠️</span> {error}
+                  </div>
                 )}
 
                 <button
                   type="submit"
                   disabled={loading || otp.length !== 6}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary w-full py-3.5 text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Verifying...' : 'Verify & Enter 🍺'}
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-navy-900/30 border-t-navy-900 rounded-full animate-spin" />
+                      Verifying...
+                    </span>
+                  ) : 'Verify & Enter 🍺'}
                 </button>
 
                 <button
                   type="button"
                   onClick={handleSendOTP}
-                  className="w-full text-gray-500 text-sm hover:text-gray-300 transition-colors"
+                  className="w-full text-gray-500 text-sm hover:text-gold-400 transition-colors py-2"
                 >
                   Didn't get it? Resend OTP
                 </button>
               </form>
-            </>
+            </div>
           )}
         </div>
 
-        <p className="text-center text-gray-600 text-xs mt-6">
+        <p className="text-center text-gray-600 text-xs mt-6 animate-fade-in">
           By signing in, you agree to not blame us for your liver. 🥂
         </p>
       </div>

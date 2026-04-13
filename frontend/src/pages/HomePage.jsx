@@ -76,14 +76,14 @@ export default function HomePage() {
         <FeedSkeleton />
       ) : posts.length === 0 ? (
         <div className="card p-12 text-center animate-fade-in">
-          <p className="text-5xl mb-4">🍺</p>
-          <p className="text-gray-400 font-display text-xl mb-2">Your feed is empty</p>
-          <p className="text-gray-600 text-sm">
-            Follow some colleagues or be the first to post! 
+          <div className="text-6xl mb-4 animate-float">🍺</div>
+          <p className="text-gradient-gold font-display text-xl mb-2">Your feed is empty</p>
+          <p className="text-gray-500 text-sm max-w-xs mx-auto">
+            Follow some colleagues or be the first to post something legendary.
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 stagger-list">
           {posts.map((post) => (
             <PostCard
               key={post._id}
@@ -93,13 +93,17 @@ export default function HomePage() {
           ))}
 
           {loading && !initialLoad && (
-            <div className="text-center py-6 text-gray-500 text-sm">
-              Pouring more posts... 🍺
+            <div className="text-center py-6">
+              <div className="inline-flex items-center gap-2 text-gray-500 text-sm">
+                <span className="w-4 h-4 border-2 border-gold-600/30 border-t-gold-500 rounded-full animate-spin" />
+                Pouring more posts...
+              </div>
             </div>
           )}
           {!hasMore && posts.length > 0 && (
             <div className="text-center py-8 text-gray-600 text-sm border-t border-navy-700">
-              You've reached the bottom of the barrel. 🪣
+              <span className="text-lg">🪣</span>
+              <p className="mt-1">You've reached the bottom of the barrel.</p>
             </div>
           )}
         </div>
@@ -112,7 +116,7 @@ function FeedSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="card p-5 animate-pulse">
+        <div key={i} className="card p-5">
           <div className="flex gap-3 mb-4">
             <div className="skeleton w-10 h-10 rounded-full flex-shrink-0" />
             <div className="flex-1 space-y-2">
@@ -126,8 +130,8 @@ function FeedSkeleton() {
             <div className="skeleton h-3 w-3/5 rounded" />
           </div>
           <div className="flex gap-4 pt-2 border-t border-navy-700">
-            <div className="skeleton h-7 w-20 rounded-lg" />
-            <div className="skeleton h-7 w-20 rounded-lg" />
+            <div className="skeleton h-8 w-24 rounded-xl" />
+            <div className="skeleton h-8 w-24 rounded-xl" />
           </div>
         </div>
       ))}

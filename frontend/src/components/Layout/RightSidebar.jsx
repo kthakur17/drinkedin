@@ -7,10 +7,10 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 
 const MOODS = [
-  { id: 'burnt_out',    label: 'Burnt Out',    emoji: '😭', color: 'hover:bg-red-900/40 data-[selected]:bg-red-900/60 data-[selected]:border-red-700' },
-  { id: 'surviving',   label: 'Surviving',    emoji: '😐', color: 'hover:bg-yellow-900/40 data-[selected]:bg-yellow-900/60 data-[selected]:border-yellow-700' },
-  { id: 'need_a_drink',label: 'Need a Drink', emoji: '🍺', color: 'hover:bg-amber-900/40 data-[selected]:bg-amber-900/60 data-[selected]:border-amber-700' },
-  { id: 'party_mode',  label: 'Party Mode',   emoji: '🥳', color: 'hover:bg-purple-900/40 data-[selected]:bg-purple-900/60 data-[selected]:border-purple-700' },
+  { id: 'burnt_out',    label: 'Burnt Out',    emoji: '😭', bg: 'bg-red-900/40 border-red-700/50',    selected: 'bg-red-900/60 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' },
+  { id: 'surviving',   label: 'Surviving',    emoji: '😐', bg: 'bg-yellow-900/40 border-yellow-700/50', selected: 'bg-yellow-900/60 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]' },
+  { id: 'need_a_drink',label: 'Need a Drink', emoji: '🍺', bg: 'bg-amber-900/40 border-amber-700/50',  selected: 'bg-amber-900/60 border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0.2)]' },
+  { id: 'party_mode',  label: 'Party Mode',   emoji: '🥳', bg: 'bg-purple-900/40 border-purple-700/50', selected: 'bg-purple-900/60 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.2)]' },
 ];
 
 export default function RightSidebar() {
@@ -67,18 +67,18 @@ export default function RightSidebar() {
       {/* Daily Mood Meter */}
       <div className="card p-4">
         <h4 className="text-gray-300 font-semibold text-sm mb-1 flex items-center gap-2">
-          <span>📊</span> Daily Mood Check-in
+          <span className="text-base">📊</span> Daily Mood Check-in
         </h4>
         <p className="text-gray-600 text-xs mb-3">How's the corporate suffering today?</p>
 
         {moodSaved && selectedMood ? (
-          <div className="flex items-center gap-3 bg-navy-800 rounded-xl p-3">
-            <span className="text-2xl">{selectedMood.emoji}</span>
+          <div className={`flex items-center gap-3 rounded-xl p-3 border transition-all ${selectedMood.selected}`}>
+            <span className="text-3xl">{selectedMood.emoji}</span>
             <div>
-              <p className="text-white text-sm font-medium">{selectedMood.label}</p>
+              <p className="text-white text-sm font-semibold">{selectedMood.label}</p>
               <button
                 onClick={() => { setMoodSaved(false); setTodayMood(null); }}
-                className="text-gray-600 text-xs hover:text-gold-400 transition-colors"
+                className="text-gray-400 text-xs hover:text-gold-400 transition-colors mt-0.5"
               >
                 Change mood
               </button>
@@ -90,11 +90,12 @@ export default function RightSidebar() {
               <button
                 key={m.id}
                 onClick={() => handleMoodSelect(m.id)}
-                data-selected={todayMood === m.id ? '' : undefined}
-                className={`flex flex-col items-center gap-1 p-3 rounded-xl border border-navy-600 text-center transition-all duration-150 ${m.color}`}
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-center transition-all duration-200
+                  hover:scale-[1.03] active:scale-[0.97]
+                  ${todayMood === m.id ? m.selected : `${m.bg} hover:brightness-125`}`}
               >
-                <span className="text-xl">{m.emoji}</span>
-                <span className="text-gray-300 text-xs leading-tight">{m.label}</span>
+                <span className="text-2xl">{m.emoji}</span>
+                <span className="text-gray-300 text-xs leading-tight font-medium">{m.label}</span>
               </button>
             ))}
           </div>
@@ -105,17 +106,18 @@ export default function RightSidebar() {
       {suggestions.length > 0 && (
         <div className="card p-4">
           <h4 className="text-gray-300 font-semibold text-sm mb-3 flex items-center gap-2">
-            <span>👥</span> Who to Follow
+            <span className="text-base">👥</span> Who to Follow
           </h4>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5 stagger-list">
             {suggestions.map((u) => {
               const status = followingMap[u._id];
               return (
-                <div key={u._id} className="flex items-center gap-3">
+                <div key={u._id} className="flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-navy-700/50 transition-all group">
                   <button
                     onClick={() => navigate(`/profile/${u.username}`)}
-                    className="w-9 h-9 rounded-full bg-navy-600 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden hover:ring-2 hover:ring-gold-600 transition-all"
+                    className="w-10 h-10 rounded-full bg-navy-600 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden
+                               ring-2 ring-transparent group-hover:ring-gold-600/30 transition-all"
                   >
                     {u.avatar
                       ? <img src={u.avatar} className="w-full h-full object-cover" alt="" />
@@ -138,10 +140,10 @@ export default function RightSidebar() {
                         ? 'bg-navy-600 text-gray-400'
                         : status === 'requested'
                         ? 'bg-navy-600 text-gray-500'
-                        : 'bg-gold-gradient text-navy-900'
+                        : 'bg-gold-gradient text-navy-900 hover:shadow-gold hover:scale-[1.03] active:scale-[0.97]'
                     }`}
                   >
-                    {status === 'following' ? 'Following' : status === 'requested' ? 'Requested' : '+ Follow'}
+                    {status === 'following' ? '✓ Following' : status === 'requested' ? 'Requested' : '+ Follow'}
                   </button>
                 </div>
               );
@@ -151,10 +153,10 @@ export default function RightSidebar() {
       )}
 
       {/* Footer */}
-      <div className="px-2">
+      <div className="px-2 py-3">
         <p className="text-gray-700 text-xs text-center leading-relaxed">
           Drinkedin © 2024<br />
-          <span className="italic">"LinkedIn by Day, Drinkedin by Night"</span>
+          <span className="italic text-gray-600">"LinkedIn by Day, Drinkedin by Night"</span>
         </p>
       </div>
     </div>

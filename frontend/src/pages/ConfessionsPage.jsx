@@ -34,13 +34,19 @@ export default function ConfessionsPage() {
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Header */}
-      <div className="card p-5 mb-4 border-purple-800/40 bg-gradient-to-r from-navy-800 to-purple-900/20">
-        <h1 className="font-display text-2xl text-white mb-1">🤫 Confessions</h1>
-        <p className="text-gray-400 text-sm">
-          Anonymous thoughts from your colleagues. We see you. We don't judge. We drink.
-        </p>
+      <div className="card p-5 mb-4 border-purple-800/40 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-900/30 via-navy-800 to-purple-900/20" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="relative">
+          <h1 className="font-display text-2xl text-white mb-1 flex items-center gap-2">
+            <span>🤫</span> Confessions
+          </h1>
+          <p className="text-gray-400 text-sm">
+            Anonymous thoughts from your colleagues. We see you. We don't judge. We drink.
+          </p>
+        </div>
       </div>
 
       {/* Create confession (always anonymous) */}
@@ -52,7 +58,7 @@ export default function ConfessionsPage() {
       {loading && posts.length === 0 ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="card p-5 animate-pulse">
+            <div key={i} className="card p-5">
               <div className="flex gap-3 mb-4">
                 <div className="skeleton w-10 h-10 rounded-full flex-shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -68,11 +74,12 @@ export default function ConfessionsPage() {
         </div>
       ) : posts.length === 0 ? (
         <div className="card p-12 text-center">
-          <p className="text-4xl mb-3">🤫</p>
-          <p className="text-gray-400">No confessions yet. Be the first to unburden your soul.</p>
+          <p className="text-5xl mb-4 animate-float">🤫</p>
+          <p className="text-gray-400 font-display text-lg">No confessions yet</p>
+          <p className="text-gray-600 text-sm mt-1">Be the first to unburden your soul.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 stagger-list">
           {posts.map((post) => (
             <PostCard
               key={post._id}
@@ -83,9 +90,14 @@ export default function ConfessionsPage() {
             <button
               onClick={() => fetchConfessions(page + 1)}
               disabled={loading}
-              className="btn-secondary w-full"
+              className="btn-secondary w-full py-3"
             >
-              {loading ? 'Loading...' : 'Load more confessions'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-gold-600/30 border-t-gold-500 rounded-full animate-spin" />
+                  Loading...
+                </span>
+              ) : 'Load more confessions'}
             </button>
           )}
         </div>

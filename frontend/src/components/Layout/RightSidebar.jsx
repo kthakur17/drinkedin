@@ -54,6 +54,9 @@ export default function RightSidebar() {
     try {
       const res = await api.post(`/users/${userId}/follow`);
       setFollowingMap((m) => ({ ...m, [userId]: res.data.status }));
+      if (res.data.status === 'following') {
+        window.dispatchEvent(new Event('feed-refresh'));
+      }
     } catch (_) {}
   };
 

@@ -39,10 +39,7 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      const [profileRes, postsRes] = await Promise.all([
-        api.get(`/users/${targetUsername}`),
-        api.get(`/posts/user/${isOwn ? currentUser._id : 'placeholder'}`),
-      ]);
+      const profileRes = await api.get(`/users/${targetUsername}`);
       const p = profileRes.data.user;
       setProfile(p);
       setEditForm({
@@ -77,9 +74,13 @@ export default function ProfilePage() {
       if (followStatus === 'following') {
         await api.post(`/users/${profile._id}/unfollow`);
         setFollowStatus('not_following');
+        window.dispatchEvent(new Event('feed-refresh'));
       } else {
         const res = await api.post(`/users/${profile._id}/follow`);
         setFollowStatus(res.data.status);
+        if (res.data.status === 'following') {
+          window.dispatchEvent(new Event('feed-refresh'));
+        }
       }
     } catch (_) {}
   };

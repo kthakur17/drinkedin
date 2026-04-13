@@ -32,6 +32,19 @@ export default function HomePage() {
     fetchFeed(1);
   }, []);
 
+  // Re-fetch feed when user follows/unfollows someone
+  useEffect(() => {
+    const handleRefresh = () => {
+      setPosts([]);
+      setPage(1);
+      setHasMore(true);
+      setInitialLoad(true);
+      fetchFeed(1);
+    };
+    window.addEventListener('feed-refresh', handleRefresh);
+    return () => window.removeEventListener('feed-refresh', handleRefresh);
+  }, []);
+
   const handlePostCreated = (newPost) => {
     setPosts((prev) => [newPost, ...prev]);
   };

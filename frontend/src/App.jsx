@@ -15,6 +15,14 @@ import GroupsPage from './pages/GroupsPage';
 import GroupFeedPage from './pages/GroupFeedPage';
 import ConfessionsPage from './pages/ConfessionsPage';
 import NotificationsPage from './pages/NotificationsPage';
+import MessagesPage from './pages/MessagesPage';
+import LeaderboardPage from './pages/LeaderboardPage';
+import BingoPage from './pages/BingoPage';
+import EventsPage from './pages/EventsPage';
+import EventDetailPage from './pages/EventDetailPage';
+import AMAPage from './pages/AMAPage';
+import SuperlativesPage from './pages/SuperlativesPage';
+import HashtagFeedPage from './pages/HashtagFeedPage';
 
 // Layout
 import Layout from './components/Layout/Layout';
@@ -75,6 +83,15 @@ const AppRoutes = () => {
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="profile/:username" element={<ProfilePage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route path="messages" element={<MessagesPage />} />
+        <Route path="messages/:conversationId" element={<MessagesPage />} />
+        <Route path="leaderboard" element={<LeaderboardPage />} />
+        <Route path="bingo" element={<BingoPage />} />
+        <Route path="events" element={<EventsPage />} />
+        <Route path="events/:id" element={<EventDetailPage />} />
+        <Route path="ama/:id" element={<AMAPage />} />
+        <Route path="superlatives" element={<SuperlativesPage />} />
+        <Route path="hashtag/:tag" element={<HashtagFeedPage />} />
       </Route>
 
       {/* Catch-all */}

@@ -22,7 +22,7 @@ const postSchema = new mongoose.Schema(
     // Content
     type: {
       type: String,
-      enum: ['text', 'image', 'meme', 'confession'],
+      enum: ['text', 'image', 'meme', 'confession', 'poll'],
       default: 'text',
     },
     text: { type: String, maxlength: 2000 },
@@ -40,9 +40,27 @@ const postSchema = new mongoose.Schema(
     // Group post
     group: { type: String, default: null },   // group slug if in a group
 
-    // Engagement
-    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    // Reactions (replaces likes)
+    reactions: [
+      {
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        type: { type: String, enum: ['beer', 'whiskey', 'wine', 'coffee', 'puke'] },
+      },
+    ],
     comments: [commentSchema],
+
+    // Poll fields
+    pollQuestion: { type: String, maxlength: 300 },
+    pollOptions: [
+      {
+        text: { type: String, maxlength: 100 },
+        votes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      },
+    ],
+    pollExpiresAt: { type: Date },
+
+    // Hashtags (extracted from text)
+    hashtags: [{ type: String, lowercase: true }],
     reposts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     repostOf: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', default: null },
 
@@ -60,8 +78,15 @@ const postSchema = new mongoose.Schema(
 );
 
 // Virtuals
-postSchema.virtual('likeCount').get(function () {
-  return this.likes.length;
+postSchema.virtual('reactionCount').get(function () {
+  return this.reactions.length;
+});
+postSchema.virtual('reactionSummary').get(function () {
+  const summary = {};
+  for (const r of this.reactions) {
+    summary[r.type] = (summary[r.type] || 0) + 1;
+  }
+  return summary;
 });
 postSchema.virtual('commentCount').get(function () {
   return this.comments.length;
@@ -73,5 +98,6 @@ postSchema.set('toJSON', { virtuals: true });
 postSchema.index({ author: 1, createdAt: -1 });
 postSchema.index({ group: 1, createdAt: -1 });
 postSchema.index({ isAnonymous: 1, createdAt: -1 });
+postSchema.index({ hashtags: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Post', postSchema);

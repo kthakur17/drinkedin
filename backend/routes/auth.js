@@ -145,6 +145,12 @@ router.get('/me', protect, async (req, res) => {
     .populate('followers', 'username alias avatar')
     .populate('following', 'username alias avatar');
 
+  // Update login streak
+  try {
+    const { updateStreak } = require('../utils/streaks');
+    await updateStreak(user, 'login');
+  } catch (_) {}
+
   res.json({ user });
 });
 

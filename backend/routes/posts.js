@@ -43,6 +43,18 @@ router.post('/', protect, uploadPost.single('image'), async (req, res) => {
     const dayOfWeek = now.getDay(); // 0=Sun, 5=Fri, 6=Sat
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 5 || dayOfWeek === 6;
 
+    // Parse hashtags from text
+    const hashtags = text ? [...new Set((text.match(/(?:^|\s)#(\w+)/g) || []).map(t => t.trim().slice(1).toLowerCase()))] : [];
+
+    // Build poll options if poll type
+    let parsedPollOptions = [];
+    const pollQuestion = req.body.pollQuestion;
+    const pollExpiresAt = req.body.pollExpiresAt;
+    if ((type || 'text') === 'poll' && req.body.pollOptions) {
+      const opts = typeof req.body.pollOptions === 'string' ? JSON.parse(req.body.pollOptions) : req.body.pollOptions;
+      parsedPollOptions = opts.map(o => ({ text: typeof o === 'string' ? o : o.text, votes: [] }));
+    }
+
     const postData = {
       author: req.user._id,
       type: type || 'text',
@@ -53,6 +65,8 @@ router.post('/', protect, uploadPost.single('image'), async (req, res) => {
       memeTopCaption,
       memeBottomCaption,
       isWeekendPost: isWeekend,
+      hashtags,
+      ...(type === 'poll' && { pollQuestion, pollOptions: parsedPollOptions, pollExpiresAt: pollExpiresAt || null }),
     };
 
     if (req.file) {
@@ -135,47 +149,133 @@ router.get('/confessions', protect, async (req, res) => {
   }
 });
 
-// ─── POST /api/posts/:id/like ─────────────────────────────────────────────────
-router.post('/:id/like', protect, async (req, res) => {
+// ─── POST /api/posts/:id/react ────────────────────────────────────────────────
+const REACTION_EMOJIS = { beer: '🍺', whiskey: '🥃', wine: '🍷', coffee: '☕', puke: '🤮' };
+
+router.post('/:id/react', protect, async (req, res) => {
   try {
+    const { type } = req.body;
+    if (!REACTION_EMOJIS[type]) return res.status(400).json({ message: 'Invalid reaction type' });
+
     const post = await Post.findById(req.params.id);
     if (!post) return res.status(404).json({ message: 'Post not found' });
 
-    const isLiked = post.likes.includes(req.user._id);
+    const existing = post.reactions.find(r => r.user.toString() === req.user._id.toString());
 
-    if (isLiked) {
-      await Post.findByIdAndUpdate(req.params.id, { $pull: { likes: req.user._id } });
-      return res.json({ liked: false, likeCount: post.likes.length - 1 });
+    if (existing && existing.type === type) {
+      // Toggle off same reaction
+      post.reactions.pull(existing._id);
+    } else if (existing) {
+      // Switch reaction type
+      existing.type = type;
     } else {
-      await Post.findByIdAndUpdate(req.params.id, { $addToSet: { likes: req.user._id } });
-
-      const newLikeCount = post.likes.length + 1;
-
-      // Notify author (if not anonymous and not self-like)
-      if (!post.isAnonymous && post.author.toString() !== req.user._id.toString()) {
-        const notif = await Notification.create({
-          recipient: post.author,
-          sender: req.user._id,
-          type: 'post_like',
-          post: post._id,
-          message: `${req.user.displayName || req.user.username} liked your post`,
-        });
-        await emitNotification(req.app, post.author, notif);
-      }
-
-      // Badge check: production down legend (50+ likes)
-      if (newLikeCount >= 50) {
-        const postAuthor = await User.findById(post.author);
-        const newBadges = await checkAndAwardBadges(postAuthor, { likesOnPost: newLikeCount });
-        if (newBadges.length > 0) {
-          await emitBadgeNotifications(req.app, postAuthor, newBadges);
-        }
-        // Update totalLikesReceived
-        await User.findByIdAndUpdate(post.author, { $inc: { totalLikesReceived: 1 } });
-      }
-
-      return res.json({ liked: true, likeCount: newLikeCount });
+      // Add new reaction
+      post.reactions.push({ user: req.user._id, type });
     }
+
+    await post.save();
+
+    const reactionCounts = {};
+    for (const r of post.reactions) {
+      reactionCounts[r.type] = (reactionCounts[r.type] || 0) + 1;
+    }
+    const userReaction = post.reactions.find(r => r.user.toString() === req.user._id.toString());
+
+    // Notify author
+    if (!existing && !post.isAnonymous && post.author.toString() !== req.user._id.toString()) {
+      const notif = await Notification.create({
+        recipient: post.author,
+        sender: req.user._id,
+        type: 'post_reaction',
+        post: post._id,
+        message: `${req.user.displayName || req.user.username} reacted ${REACTION_EMOJIS[type]} to your post`,
+      });
+      await emitNotification(req.app, post.author, notif);
+    }
+
+    // Badge check
+    if (post.reactions.length >= 50) {
+      const postAuthor = await User.findById(post.author);
+      const newBadges = await checkAndAwardBadges(postAuthor, { reactionsOnPost: post.reactions.length });
+      if (newBadges.length > 0) await emitBadgeNotifications(req.app, postAuthor, newBadges);
+    }
+
+    res.json({ reacted: !!userReaction, reactionType: userReaction?.type || null, reactionCounts, totalReactions: post.reactions.length });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── POST /api/posts/:id/like (backward compat) ──────────────────────────────
+router.post('/:id/like', protect, async (req, res) => {
+  req.body.type = 'beer';
+  return router.handle(req, res);
+});
+
+// ─── POST /api/posts/:id/vote (polls) ────────────────────────────────────────
+router.post('/:id/vote', protect, async (req, res) => {
+  try {
+    const { optionIndex } = req.body;
+    const post = await Post.findById(req.params.id);
+    if (!post || post.type !== 'poll') return res.status(404).json({ message: 'Poll not found' });
+    if (post.pollExpiresAt && new Date() > new Date(post.pollExpiresAt)) {
+      return res.status(400).json({ message: 'Poll has expired' });
+    }
+    if (optionIndex < 0 || optionIndex >= post.pollOptions.length) {
+      return res.status(400).json({ message: 'Invalid option' });
+    }
+
+    // Check if already voted on any option
+    const alreadyVoted = post.pollOptions.some(opt => opt.votes.includes(req.user._id));
+    if (alreadyVoted) return res.status(400).json({ message: 'Already voted' });
+
+    post.pollOptions[optionIndex].votes.push(req.user._id);
+    await post.save();
+
+    const totalVotes = post.pollOptions.reduce((sum, o) => sum + o.votes.length, 0);
+    const options = post.pollOptions.map(o => ({ text: o.text, votes: o.votes.length, percentage: totalVotes ? Math.round((o.votes.length / totalVotes) * 100) : 0 }));
+
+    res.json({ options, totalVotes, votedIndex: optionIndex });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── POST /api/posts/:id/bookmark ─────────────────────────────────────────────
+router.post('/:id/bookmark', protect, async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
+    const isBookmarked = req.user.savedPosts?.includes(postId);
+    if (isBookmarked) {
+      await User.findByIdAndUpdate(req.user._id, { $pull: { savedPosts: postId } });
+      return res.json({ bookmarked: false });
+    } else {
+      await User.findByIdAndUpdate(req.user._id, { $addToSet: { savedPosts: postId } });
+      return res.json({ bookmarked: true });
+    }
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── GET /api/posts/saved ─────────────────────────────────────────────────────
+router.get('/saved', protect, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const user = await User.findById(req.user._id);
+    const savedIds = user.savedPosts || [];
+
+    const posts = await Post.find({ _id: { $in: savedIds } })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('author', 'username alias avatar jobTitle corporatePersona');
+
+    res.json({ posts, page, hasMore: posts.length === limit });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

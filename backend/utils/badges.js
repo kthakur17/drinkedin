@@ -53,6 +53,41 @@ const BADGE_DEFINITIONS = [
     description: 'Posted 3 memes. IT department has filed a complaint.',
     trigger: 'meme_count_3',
   },
+  {
+    id: 'streak_3',
+    name: '3-Day Bender',
+    emoji: '🔥',
+    description: '3-day login streak. Can\'t stop, won\'t stop.',
+    trigger: 'login_streak_3',
+  },
+  {
+    id: 'streak_7',
+    name: 'Weekly Warrior',
+    emoji: '💪',
+    description: '7-day login streak. Your manager is impressed (and concerned).',
+    trigger: 'login_streak_7',
+  },
+  {
+    id: 'streak_30',
+    name: 'Corporate Lifer',
+    emoji: '🏢',
+    description: '30-day login streak. You basically live here now.',
+    trigger: 'login_streak_30',
+  },
+  {
+    id: 'mood_streak_7',
+    name: 'Emotionally Available',
+    emoji: '🧠',
+    description: '7-day mood check-in streak. Your therapist would be proud.',
+    trigger: 'mood_streak_7',
+  },
+  {
+    id: 'poll_master',
+    name: 'Poll Master',
+    emoji: '📊',
+    description: 'Created 5 polls. Democracy at its finest.',
+    trigger: 'poll_count_5',
+  },
 ];
 
 /**
@@ -77,8 +112,8 @@ const checkAndAwardBadges = async (user, triggerContext = {}) => {
     newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'overtime_survivor'));
   }
 
-  // 3. Production down legend (50+ likes on a post)
-  if (!hasBadge('production_down_legend') && triggerContext.likesOnPost >= 50) {
+  // 3. Production down legend (50+ reactions on a post)
+  if (!hasBadge('production_down_legend') && (triggerContext.reactionsOnPost >= 50 || triggerContext.likesOnPost >= 50)) {
     newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'production_down_legend'));
   }
 
@@ -95,6 +130,27 @@ const checkAndAwardBadges = async (user, triggerContext = {}) => {
   // 6. Confession king (5+ anonymous posts)
   if (!hasBadge('confession_king') && triggerContext.anonCount >= 5) {
     newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'confession_king'));
+  }
+
+  // Streak badges
+  const loginStreak = user.streaks?.login?.current || 0;
+  const moodStreak = user.streaks?.mood?.current || 0;
+  if (!hasBadge('streak_3') && loginStreak >= 3) {
+    newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'streak_3'));
+  }
+  if (!hasBadge('streak_7') && loginStreak >= 7) {
+    newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'streak_7'));
+  }
+  if (!hasBadge('streak_30') && loginStreak >= 30) {
+    newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'streak_30'));
+  }
+  if (!hasBadge('mood_streak_7') && moodStreak >= 7) {
+    newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'mood_streak_7'));
+  }
+
+  // Poll master
+  if (!hasBadge('poll_master') && triggerContext.pollCount >= 5) {
+    newBadges.push(BADGE_DEFINITIONS.find((b) => b.id === 'poll_master'));
   }
 
   if (newBadges.length > 0) {

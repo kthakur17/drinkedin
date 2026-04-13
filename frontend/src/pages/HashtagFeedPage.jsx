@@ -1,54 +1,44 @@
 /**
- * HomePage — Main feed with infinite scroll
+ * HashtagFeedPage — feed filtered by hashtag with infinite scroll
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import CreatePost from '../components/Feed/CreatePost';
+import { useParams, useNavigate } from 'react-router-dom';
 import PostCard from '../components/Feed/PostCard';
-import StoriesBar from '../components/Feed/StoriesBar';
 import api from '../utils/api';
 
-export default function HomePage() {
+export default function HashtagFeedPage() {
+  const { tag } = useParams();
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const fetchFeed = useCallback(async (pageNum = 1) => {
+  const fetchPosts = useCallback(async (pageNum = 1) => {
     if (loading) return;
     setLoading(true);
     try {
-      const res = await api.get(`/feed?page=${pageNum}&limit=15`);
+      const res = await api.get(`/feed/hashtag/${tag}?page=${pageNum}&limit=15`);
       const newPosts = res.data.posts || [];
       setPosts((prev) => pageNum === 1 ? newPosts : [...prev, ...newPosts]);
       setHasMore(res.data.hasMore);
+      setTotalCount(res.data.totalCount || 0);
       setPage(pageNum);
     } catch (_) {}
     setLoading(false);
     setInitialLoad(false);
-  }, [loading]);
+  }, [loading, tag]);
 
   useEffect(() => {
-    fetchFeed(1);
-  }, []);
-
-  // Re-fetch feed when user follows/unfollows someone
-  useEffect(() => {
-    const handleRefresh = () => {
-      setPosts([]);
-      setPage(1);
-      setHasMore(true);
-      setInitialLoad(true);
-      fetchFeed(1);
-    };
-    window.addEventListener('feed-refresh', handleRefresh);
-    return () => window.removeEventListener('feed-refresh', handleRefresh);
-  }, []);
-
-  const handlePostCreated = (newPost) => {
-    setPosts((prev) => [newPost, ...prev]);
-  };
+    setPosts([]);
+    setPage(1);
+    setHasMore(true);
+    setInitialLoad(true);
+    fetchPosts(1);
+  }, [tag]);
 
   const handlePostDeleted = (postId) => {
     setPosts((prev) => prev.filter((p) => p._id !== postId));
@@ -62,26 +52,44 @@ export default function HomePage() {
         hasMore &&
         !loading
       ) {
-        fetchFeed(page + 1);
+        fetchPosts(page + 1);
       }
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore, loading, page, fetchFeed]);
+  }, [hasMore, loading, page, fetchPosts]);
 
   return (
-    <div>
-      <StoriesBar />
-      <CreatePost onPostCreated={handlePostCreated} />
+    <div className="animate-fade-in">
+      {/* Header */}
+      <div className="card p-5 mb-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-gold-900/20 via-navy-800 to-gold-900/10" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gold-600/10 rounded-full blur-3xl" />
+        <div className="relative">
+          <button
+            onClick={() => navigate('/')}
+            className="text-gray-500 text-xs hover:text-gold-400 transition-colors mb-2"
+          >
+            ← Back to Feed
+          </button>
+          <h1 className="font-display text-2xl text-gradient-gold">#{tag}</h1>
+          {!initialLoad && (
+            <p className="text-gray-400 text-sm mt-1">
+              {totalCount} {totalCount === 1 ? 'post' : 'posts'}
+            </p>
+          )}
+        </div>
+      </div>
 
+      {/* Posts */}
       {initialLoad ? (
         <FeedSkeleton />
       ) : posts.length === 0 ? (
         <div className="card p-12 text-center animate-fade-in">
-          <div className="text-6xl mb-4 animate-float">🍺</div>
-          <p className="text-gradient-gold font-display text-xl mb-2">Your feed is empty</p>
+          <div className="text-6xl mb-4 animate-float">#</div>
+          <p className="text-gradient-gold font-display text-xl mb-2">No posts with #{tag}</p>
           <p className="text-gray-500 text-sm max-w-xs mx-auto">
-            Follow some colleagues or be the first to post something legendary.
+            Be the first to use this hashtag. Make history. Or at least a post.
           </p>
         </div>
       ) : (
@@ -104,8 +112,8 @@ export default function HomePage() {
           )}
           {!hasMore && posts.length > 0 && (
             <div className="text-center py-8 text-gray-600 text-sm border-t border-navy-700">
-              <span className="text-lg">🪣</span>
-              <p className="mt-1">You've reached the bottom of the barrel.</p>
+              <span className="text-lg">#</span>
+              <p className="mt-1">That's everything tagged #{tag}.</p>
             </div>
           )}
         </div>

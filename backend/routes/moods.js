@@ -20,6 +20,14 @@ router.post('/', protect, async (req, res) => {
     }
 
     const newMood = await Mood.create({ user: req.user._id, mood, date: today });
+
+    // Update mood streak
+    try {
+      const { updateStreak } = require('../utils/streaks');
+      const user = await require('../models/User').findById(req.user._id);
+      await updateStreak(user, 'mood');
+    } catch (_) {}
+
     res.json({ mood: newMood, isUpdate: false });
   } catch (err) {
     res.status(500).json({ message: err.message });

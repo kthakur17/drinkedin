@@ -56,4 +56,26 @@ router.get('/trending', protect, async (req, res) => {
   }
 });
 
+// GET /api/feed/hashtag/:tag — posts with a specific hashtag
+router.get('/hashtag/:tag', protect, async (req, res) => {
+  try {
+    const tag = req.params.tag.toLowerCase();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+
+    const posts = await Post.find({ hashtags: tag })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate('author', 'username alias avatar jobTitle corporatePersona')
+      .populate('comments.author', 'username alias avatar');
+
+    const total = await Post.countDocuments({ hashtags: tag });
+
+    res.json({ posts, page, hasMore: posts.length === limit, total, tag });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

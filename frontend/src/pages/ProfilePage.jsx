@@ -23,6 +23,8 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [savingEdit, setSavingEdit] = useState(false);
+  const [activeTab, setActiveTab] = useState('posts');
+  const [savedPosts, setSavedPosts] = useState([]);
 
   useEffect(() => {
     loadProfile();
@@ -246,26 +248,59 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Posts */}
+      {/* Posts / Saved tabs */}
       <div>
-        <h2 className="font-display text-lg text-white mb-3 px-1 flex items-center gap-2">
-          <span>📝</span> Posts
-        </h2>
-        {posts.length === 0 ? (
-          <div className="card p-10 text-center">
-            <p className="text-3xl mb-2">📝</p>
-            <p className="text-gray-500 text-sm">No posts yet.</p>
-          </div>
+        <div className="flex items-center gap-1 mb-3 px-1">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`font-display text-lg px-3 py-1 rounded-lg transition-all ${activeTab === 'posts' ? 'text-white bg-navy-700' : 'text-gray-500 hover:text-gray-300'}`}
+          >
+            📝 Posts
+          </button>
+          {isOwn && (
+            <button
+              onClick={async () => {
+                setActiveTab('saved');
+                if (savedPosts.length === 0) {
+                  try {
+                    const res = await api.get('/posts/saved');
+                    setSavedPosts(res.data.posts || []);
+                  } catch (_) {}
+                }
+              }}
+              className={`font-display text-lg px-3 py-1 rounded-lg transition-all ${activeTab === 'saved' ? 'text-white bg-navy-700' : 'text-gray-500 hover:text-gray-300'}`}
+            >
+              🔖 Saved
+            </button>
+          )}
+        </div>
+
+        {activeTab === 'posts' ? (
+          posts.length === 0 ? (
+            <div className="card p-10 text-center">
+              <p className="text-3xl mb-2">📝</p>
+              <p className="text-gray-500 text-sm">No posts yet.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 stagger-list">
+              {posts.map((p) => (
+                <PostCard key={p._id} post={p} onDelete={isOwn ? (id) => setPosts((prev) => prev.filter((x) => x._id !== id)) : undefined} />
+              ))}
+            </div>
+          )
         ) : (
-          <div className="flex flex-col gap-4 stagger-list">
-            {posts.map((p) => (
-              <PostCard
-                key={p._id}
-                post={p}
-                onDelete={isOwn ? (id) => setPosts((prev) => prev.filter((x) => x._id !== id)) : undefined}
-              />
-            ))}
-          </div>
+          savedPosts.length === 0 ? (
+            <div className="card p-10 text-center">
+              <p className="text-3xl mb-2">🔖</p>
+              <p className="text-gray-500 text-sm">No saved posts yet.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 stagger-list">
+              {savedPosts.map((p) => (
+                <PostCard key={p._id} post={p} />
+              ))}
+            </div>
+          )
         )}
       </div>
     </div>

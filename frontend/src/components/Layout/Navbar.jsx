@@ -102,6 +102,9 @@ export default function Navbar({ unreadCount, onClearUnread }) {
           <Link to="/groups" className="btn-ghost hidden sm:flex text-lg" title="Groups">🍺</Link>
           <Link to="/confessions" className="btn-ghost hidden sm:flex text-lg" title="Confessions">🤫</Link>
 
+          {/* Messages */}
+          <Link to="/messages" className="btn-ghost text-lg" title="Messages">💬</Link>
+
           {/* Notifications */}
           <button
             onClick={handleNotifClick}

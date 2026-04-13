@@ -12,9 +12,14 @@ const TYPE_CONFIG = {
   follow_accepted: { emoji: '🤝', label: 'Request accepted', accent: 'notif-accent-follow' },
   new_follower:    { emoji: '👥', label: 'New follower',      accent: 'notif-accent-follow' },
   post_like:       { emoji: '🍺', label: 'Post liked',        accent: 'notif-accent-like' },
+  post_reaction:   { emoji: '🍺', label: 'Reaction',          accent: 'notif-accent-like' },
   post_comment:    { emoji: '💬', label: 'New comment',        accent: 'notif-accent-comment' },
   badge_earned:    { emoji: '🏆', label: 'Badge earned',       accent: 'notif-accent-badge' },
   repost:          { emoji: '🔁', label: 'Repost',             accent: 'notif-accent-like' },
+  direct_message:  { emoji: '💬', label: 'Message',            accent: 'notif-accent-comment' },
+  event_invite:    { emoji: '📅', label: 'Event',              accent: 'notif-accent-badge' },
+  ama_answer:      { emoji: '❓', label: 'AMA Answer',         accent: 'notif-accent-comment' },
+  poll_vote:       { emoji: '📊', label: 'Poll vote',          accent: 'notif-accent-like' },
 };
 
 export default function NotificationsPage() {

@@ -11,6 +11,7 @@ const POST_TYPES = [
   { id: 'text',  label: 'Post',      emoji: '✍️' },
   { id: 'image', label: 'Photo',     emoji: '🖼️' },
   { id: 'meme',  label: 'Meme',      emoji: '😂' },
+  { id: 'poll',  label: 'Poll',      emoji: '📊' },
 ];
 
 const MEME_TEMPLATES = [
@@ -31,6 +32,8 @@ export default function CreatePost({ onPostCreated, groupSlug = null }) {
   const [memeTemplate, setMemeTemplate] = useState('standup');
   const [memeTop, setMemeTop] = useState('');
   const [memeBottom, setMemeBottom] = useState('');
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [badgesEarned, setBadgesEarned] = useState([]);
@@ -61,6 +64,8 @@ export default function CreatePost({ onPostCreated, groupSlug = null }) {
     setImagePreview(null);
     setMemeTop('');
     setMemeBottom('');
+    setPollQuestion('');
+    setPollOptions(['', '']);
     setType('text');
     setExpanded(false);
     setError('');
@@ -83,6 +88,10 @@ export default function CreatePost({ onPostCreated, groupSlug = null }) {
         formData.append('memeTemplate', memeTemplate);
         formData.append('memeTopCaption', memeTop);
         formData.append('memeBottomCaption', memeBottom);
+      }
+      if (type === 'poll') {
+        formData.append('pollQuestion', pollQuestion);
+        formData.append('pollOptions', JSON.stringify(pollOptions.filter(o => o.trim())));
       }
       if (type === 'image' && imageFile) {
         formData.append('image', imageFile);
@@ -260,6 +269,49 @@ export default function CreatePost({ onPostCreated, groupSlug = null }) {
             </div>
           )}
 
+          {/* Poll Creator */}
+          {type === 'poll' && (
+            <div className="mb-3 space-y-3">
+              <input
+                value={pollQuestion}
+                onChange={(e) => setPollQuestion(e.target.value)}
+                placeholder="Ask a question..."
+                className="input text-sm font-medium"
+                maxLength={300}
+              />
+              <div className="space-y-2">
+                {pollOptions.map((opt, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      value={opt}
+                      onChange={(e) => setPollOptions(prev => prev.map((o, i) => i === idx ? e.target.value : o))}
+                      placeholder={`Option ${idx + 1}`}
+                      className="input text-sm flex-1"
+                      maxLength={100}
+                    />
+                    {pollOptions.length > 2 && (
+                      <button type="button" onClick={() => setPollOptions(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-gray-600 hover:text-red-400 text-sm px-2 transition-colors">×</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {pollOptions.length < 6 && (
+                <button type="button" onClick={() => setPollOptions(prev => [...prev, ''])}
+                  className="btn-ghost text-sm w-full border border-dashed border-navy-600 hover:border-gold-700">
+                  + Add option
+                </button>
+              )}
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Optional context..."
+                className="textarea text-sm"
+                rows={2}
+              />
+            </div>
+          )}
+
           {/* Footer: anon toggle + submit */}
           <div className="flex items-center justify-between gap-3">
             <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-500 hover:text-gray-300 transition-colors">
@@ -276,7 +328,7 @@ export default function CreatePost({ onPostCreated, groupSlug = null }) {
               <button type="button" onClick={resetForm} className="btn-ghost text-sm">Cancel</button>
               <button
                 type="submit"
-                disabled={loading || (type !== 'image' && type !== 'meme' && !text.trim())}
+                disabled={loading || (type === 'poll' ? (pollOptions.filter(o => o.trim()).length < 2 || !pollQuestion.trim()) : (type !== 'image' && type !== 'meme' && !text.trim()))}
                 className="btn-primary text-sm disabled:opacity-50"
               >
                 {loading ? 'Posting...' : isAnonymous ? '🤫 Post Anonymously' : '🍺 Post'}

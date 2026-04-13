@@ -24,6 +24,14 @@ const feedRoutes = require('./routes/feed');
 const groupRoutes = require('./routes/groups');
 const notificationRoutes = require('./routes/notifications');
 const moodRoutes = require('./routes/moods');
+const hashtagRoutes = require('./routes/hashtags');
+const messageRoutes = require('./routes/messages');
+const storyRoutes = require('./routes/stories');
+const bingoRoutes = require('./routes/bingo');
+const eventRoutes = require('./routes/events');
+const amaRoutes = require('./routes/ama');
+const leaderboardRoutes = require('./routes/leaderboard');
+const superlativeRoutes = require('./routes/superlatives');
 
 const app = express();
 const server = http.createServer(app);
@@ -49,6 +57,17 @@ io.on('connection', (socket) => {
   socket.on('register', (userId) => {
     connectedUsers.set(userId, socket.id);
     console.log(`👤 User ${userId} registered with socket ${socket.id}`);
+  });
+
+  // DM room management
+  socket.on('join_conversation', (conversationId) => {
+    socket.join(`conv_${conversationId}`);
+  });
+  socket.on('leave_conversation', (conversationId) => {
+    socket.leave(`conv_${conversationId}`);
+  });
+  socket.on('typing', ({ conversationId, userId }) => {
+    socket.to(`conv_${conversationId}`).emit('typing', { conversationId, userId });
   });
 
   socket.on('disconnect', () => {
@@ -90,6 +109,14 @@ app.use('/api/feed', feedRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/moods', moodRoutes);
+app.use('/api/hashtags', hashtagRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/stories', storyRoutes);
+app.use('/api/bingo', bingoRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/ama', amaRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/superlatives', superlativeRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

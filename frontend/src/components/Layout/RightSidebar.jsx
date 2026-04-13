@@ -2,9 +2,32 @@
  * RightSidebar — Daily Mood Meter + Who to Follow suggestions
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+
+const DRINK_RECS = {
+  burnt_out: [
+    { name: 'Espresso Martini', emoji: '☕🍸', tagline: 'Caffeinated desperation in a glass' },
+    { name: 'Irish Coffee', emoji: '🥃☕', tagline: 'Because regular coffee gave up on you too' },
+    { name: 'Double Shot of Anything', emoji: '🥃🥃', tagline: 'Standards? Never heard of them' },
+  ],
+  surviving: [
+    { name: 'Craft Beer', emoji: '🍺', tagline: 'Sophisticated enough to pretend you\'re fine' },
+    { name: 'Gin & Tonic', emoji: '🍸', tagline: 'The official drink of "I\'m managing"' },
+    { name: 'Light Lager', emoji: '🍻', tagline: 'Low effort, just like your work today' },
+  ],
+  need_a_drink: [
+    { name: 'Whiskey Sour', emoji: '🥃🍋', tagline: 'Sour, like your mood after that meeting' },
+    { name: 'Old Fashioned', emoji: '🥃', tagline: 'For when you need something strong and reliable' },
+    { name: 'Tequila Shot', emoji: '🧂🍋', tagline: 'Skip the chaser, embrace the chaos' },
+  ],
+  party_mode: [
+    { name: 'Champagne', emoji: '🥂', tagline: 'Pop bottles, not production servers' },
+    { name: 'Margarita', emoji: '🍹', tagline: 'Salt the rim, not your colleagues\' wounds' },
+    { name: 'Jager Bomb', emoji: '💣', tagline: 'Tomorrow\'s hangover is future-you\'s problem' },
+  ],
+};
 
 const MOODS = [
   { id: 'burnt_out',    label: 'Burnt Out',    emoji: '😭', bg: 'bg-red-900/40 border-red-700/50',    selected: 'bg-red-900/60 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.2)]' },
@@ -19,10 +42,12 @@ export default function RightSidebar() {
   const [moodSaved, setMoodSaved] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [followingMap, setFollowingMap] = useState({});
+  const [trendingTags, setTrendingTags] = useState([]);
 
   useEffect(() => {
     fetchTodayMood();
     fetchSuggestions();
+    fetchTrending();
   }, []);
 
   const fetchTodayMood = async () => {
@@ -32,6 +57,13 @@ export default function RightSidebar() {
         setTodayMood(res.data.mood.mood);
         setMoodSaved(true);
       }
+    } catch (_) {}
+  };
+
+  const fetchTrending = async () => {
+    try {
+      const res = await api.get('/hashtags/trending');
+      setTrendingTags(res.data.hashtags || []);
     } catch (_) {}
   };
 
@@ -61,6 +93,14 @@ export default function RightSidebar() {
   };
 
   const selectedMood = MOODS.find((m) => m.id === todayMood);
+
+  // Stable daily drink rec
+  const drinkRec = useMemo(() => {
+    if (!todayMood || !DRINK_RECS[todayMood]) return null;
+    const recs = DRINK_RECS[todayMood];
+    const dayIndex = new Date().getDate() % recs.length;
+    return recs[dayIndex];
+  }, [todayMood]);
 
   return (
     <div className="flex flex-col gap-3">
@@ -101,6 +141,43 @@ export default function RightSidebar() {
           </div>
         )}
       </div>
+
+      {/* Drink Recommendation */}
+      {moodSaved && drinkRec && (
+        <div className="card p-4">
+          <h4 className="text-gray-300 font-semibold text-sm mb-2 flex items-center gap-2">
+            <span className="text-base">🍹</span> Today's Prescription
+          </h4>
+          <div className="bg-navy-800 rounded-xl p-3 border border-navy-600">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-2xl">{drinkRec.emoji}</span>
+              <span className="text-white font-semibold text-sm">{drinkRec.name}</span>
+            </div>
+            <p className="text-gray-500 text-xs italic">{drinkRec.tagline}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Trending Hashtags */}
+      {trendingTags.length > 0 && (
+        <div className="card p-4">
+          <h4 className="text-gray-300 font-semibold text-sm mb-3 flex items-center gap-2">
+            <span className="text-base">🔥</span> Trending
+          </h4>
+          <div className="flex flex-col gap-1.5">
+            {trendingTags.slice(0, 6).map((t) => (
+              <button
+                key={t.tag}
+                onClick={() => navigate(`/hashtag/${t.tag}`)}
+                className="flex items-center justify-between px-2 py-1.5 -mx-2 rounded-lg hover:bg-navy-700/50 transition-colors text-left"
+              >
+                <span className="text-gold-400 text-sm font-medium">#{t.tag}</span>
+                <span className="text-gray-600 text-xs">{t.count} posts</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Who to Follow */}
       {suggestions.length > 0 && (

@@ -41,6 +41,16 @@ const userSchema = new mongoose.Schema(
     // Groups
     groups: [{ type: String }],
 
+    // Saved / Bookmarked posts
+    savedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
+
+    // Streaks
+    streaks: {
+      login:   { current: { type: Number, default: 0 }, longest: { type: Number, default: 0 }, lastDate: { type: String, default: '' } },
+      posting: { current: { type: Number, default: 0 }, longest: { type: Number, default: 0 }, lastDate: { type: String, default: '' } },
+      mood:    { current: { type: Number, default: 0 }, longest: { type: Number, default: 0 }, lastDate: { type: String, default: '' } },
+    },
+
     // Gamification
     badges: [
       {

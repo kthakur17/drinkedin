@@ -7,8 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home Feed', emoji: '🏠', end: true },
+  { to: '/messages', label: 'Messages', emoji: '💬' },
   { to: '/confessions', label: 'Confessions', emoji: '🤫' },
   { to: '/groups', label: 'Groups', emoji: '🍺' },
+  { to: '/events', label: 'Events', emoji: '📅' },
+  { to: '/leaderboard', label: 'Leaderboard', emoji: '🏆' },
+  { to: '/bingo', label: 'Bingo', emoji: '🎯' },
+  { to: '/superlatives', label: 'Superlatives', emoji: '👑' },
   { to: '/notifications', label: 'Notifications', emoji: '🔔' },
 ];
 
@@ -52,6 +57,14 @@ export default function LeftSidebar() {
             <span className="badge-pill mt-2 text-xs">
               🎭 {user.corporatePersona}
             </span>
+          )}
+
+          {/* Streak */}
+          {user?.streaks?.login?.current > 0 && (
+            <div className="mt-2 flex items-center gap-1.5 text-xs">
+              <span className="text-base">🔥</span>
+              <span className="text-gold-400 font-semibold">{user.streaks.login.current}-day streak</span>
+            </div>
           )}
 
           {/* Stats row */}

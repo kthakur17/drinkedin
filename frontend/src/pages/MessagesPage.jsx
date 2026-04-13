@@ -31,22 +31,30 @@ export default function MessagesPage() {
   const searchTimeoutRef = useRef(null);
 
   // Socket for real-time messages
-  const { emit } = useSocket((notif) => {
-    if (notif.type === 'new_message' && notif.conversationId === activeConvo?._id) {
-      setMessages((prev) => [...prev, notif.message]);
-      scrollToBottom();
-    }
-    // Update conversation list preview
-    if (notif.type === 'new_message') {
+  const activeConvoRef = useRef(null);
+  activeConvoRef.current = activeConvo;
+
+  const { emit } = useSocket(
+    // onNotification — handle notification events (e.g. for badges, toasts)
+    null,
+    // onNewMessage — handle real-time messages from conversation room
+    (message) => {
+      const currentConvo = activeConvoRef.current;
+      // Only add to messages if it's for the active conversation and not sent by us
+      if (message.conversation === currentConvo?._id && message.sender?._id !== user?._id) {
+        setMessages((prev) => [...prev, message]);
+        scrollToBottom();
+      }
+      // Update conversation list preview
       setConversations((prev) =>
         prev.map((c) =>
-          c._id === notif.conversationId
-            ? { ...c, lastMessage: notif.message, updatedAt: new Date().toISOString() }
+          c._id === message.conversation
+            ? { ...c, lastMessage: message, updatedAt: new Date().toISOString() }
             : c
         )
       );
     }
-  });
+  );
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {

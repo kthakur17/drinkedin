@@ -6,9 +6,11 @@ import { useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
 
-export const useSocket = (onNotification) => {
+export const useSocket = (onNotification, onNewMessage) => {
   const { user } = useAuth();
   const socketRef = useRef(null);
+  const onNewMessageRef = useRef(onNewMessage);
+  onNewMessageRef.current = onNewMessage;
 
   useEffect(() => {
     if (!user?._id) return;
@@ -26,6 +28,10 @@ export const useSocket = (onNotification) => {
 
     socket.on('notification', (notif) => {
       if (onNotification) onNotification(notif);
+    });
+
+    socket.on('new_message', (message) => {
+      if (onNewMessageRef.current) onNewMessageRef.current(message);
     });
 
     socket.on('disconnect', () => {

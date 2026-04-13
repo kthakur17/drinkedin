@@ -158,7 +158,7 @@ router.post('/conversations/:id', protect, async (req, res) => {
     // Emit socket event to conversation room
     const io = req.app.get('io');
     if (io) {
-      io.to(`conversation:${req.params.id}`).emit('new_message', message);
+      io.to(`conv_${req.params.id}`).emit('new_message', message);
     }
 
     // Create notification for recipient(s)
@@ -170,7 +170,7 @@ router.post('/conversations/:id', protect, async (req, res) => {
       const notif = await Notification.create({
         recipient: recipientId,
         sender: req.user._id,
-        type: 'new_message',
+        type: 'direct_message',
         message: `${req.user.displayName || req.user.username} sent you a message`,
       });
       await emitNotification(req.app, recipientId, notif);

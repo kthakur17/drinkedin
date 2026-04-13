@@ -107,7 +107,12 @@ router.get('/conversations/:id', protect, async (req, res) => {
     const total = await Message.countDocuments({ conversation: req.params.id });
     const hasMore = page * limit < total;
 
-    res.json({ messages, page, hasMore });
+    // Populate conversation participants for the frontend
+    const populatedConversation = await Conversation.findById(req.params.id)
+      .populate('participants', 'username alias avatar')
+      .populate('lastMessage');
+
+    res.json({ conversation: populatedConversation, messages, page, hasMore });
   } catch (err) {
     console.error('Get messages error:', err);
     res.status(500).json({ message: err.message });

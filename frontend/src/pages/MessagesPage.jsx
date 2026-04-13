@@ -97,7 +97,7 @@ export default function MessagesPage() {
     setSending(true);
     try {
       const res = await api.post(`/messages/conversations/${activeConvo._id}`, {
-        content: messageText.trim(),
+        text: messageText.trim(),
       });
       setMessages((prev) => [...prev, res.data.message]);
       setMessageText('');
@@ -137,7 +137,7 @@ export default function MessagesPage() {
   const startConversation = async (targetUser) => {
     try {
       const res = await api.post('/messages/conversations', {
-        participantId: targetUser._id,
+        recipientId: targetUser._id,
       });
       const convo = res.data.conversation;
       setConversations((prev) => {
@@ -270,7 +270,7 @@ export default function MessagesPage() {
                           {convo.lastMessage && (
                             <p className="text-gray-500 text-xs truncate mt-0.5">
                               {convo.lastMessage.sender === user?._id ? 'You: ' : ''}
-                              {convo.lastMessage.content}
+                              {convo.lastMessage.text}
                             </p>
                           )}
                         </div>
@@ -349,7 +349,7 @@ export default function MessagesPage() {
                                 : 'bg-navy-700 border border-navy-600 text-gray-200 rounded-bl-md'
                               }`}
                           >
-                            <p>{msg.content}</p>
+                            <p>{msg.text}</p>
                             {msg.createdAt && (
                               <p className={`text-xs mt-1 ${isOwn ? 'text-gold-600/60' : 'text-gray-600'}`}>
                                 {formatDistanceToNow(new Date(msg.createdAt), { addSuffix: true })}

@@ -372,9 +372,9 @@ export default function MessagesPage() {
                 </div>
 
                 {/* Message Input */}
-                <form onSubmit={handleSend} className="p-4 border-t border-navy-700 flex gap-2 flex-shrink-0">
+                <form onSubmit={handleSend} className="p-4 border-t border-navy-700 flex items-center gap-2 flex-shrink-0">
                   <input
-                    className="input flex-1 text-sm"
+                    className="flex-1 min-w-0 bg-navy-800 border border-navy-600 rounded-xl px-4 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-gold-600 focus:ring-2 focus:ring-gold-600/20 transition-all duration-200"
                     placeholder="Type a message..."
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
@@ -383,7 +383,7 @@ export default function MessagesPage() {
                   <button
                     type="submit"
                     disabled={!messageText.trim() || sending}
-                    className="btn-primary px-4 py-2 text-sm flex-shrink-0"
+                    className="btn-primary px-4 py-2.5 text-sm flex-shrink-0"
                   >
                     {sending ? (
                       <span className="w-4 h-4 border-2 border-navy-800/30 border-t-navy-800 rounded-full animate-spin inline-block" />
